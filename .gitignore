@@ -1,0 +1,17 @@
+# Node modules
+node_modules/
+
+# Compiled output
+out/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm/
+
+# Optional eslint cache
+.eslintcache
+
+# IDEs and editors
+.vscode/

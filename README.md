@@ -1,0 +1,1 @@
+This year I am using Advent of Code as an opportunity to learn typescript. I am not committing to solving every puzzle. My solutions are probably going to be inefficient. My use of the language is going to be rusty but hopefully as the days progress I'll be able to flex my typescript muscles!
