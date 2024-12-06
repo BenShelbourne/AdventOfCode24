@@ -1,5 +1,7 @@
 import * as fsPromise from 'fs/promises';
 
+class InfinteLoopError extends Error {}
+
 class Obstacle {
     x: number
     y: number
@@ -54,17 +56,43 @@ class GuardMap {
     getMap() {
         return this.map;
     }
+
+    copy() {
+        return this.map.map((column) => {
+            return column.map((row) => row);
+        });
+    }
+}
+
+class GuardPosition {
+    x: number
+    y: number
+    direction: GuardDirection
+
+    constructor(x: number, y: number, direction: GuardDirection) {
+        this.x = x;
+        this.y = y;
+        this.direction = direction;
+    }
+
+    equals(cmp: GuardPosition): boolean {
+        if (this.x == cmp.x && this.y == cmp.y && this.direction == cmp.direction) {
+            return true;
+        }
+        return false;
+    }
 }
 
 class Guard {
     map: GuardMap;
     direction: GuardDirection = GuardDirection.UP;
-    position: [x: number, y: number];
+    position: GuardPosition;
     moves = 1;
+    positions: Array<GuardPosition> = [];
 
     constructor(guardMap: GuardMap, startPos: [number, number]) {
         this.map = guardMap;
-        this.position = startPos;
+        this.position = new GuardPosition(startPos[0], startPos[1], this.direction);
     }
 
     turnRight(): void {
@@ -90,21 +118,37 @@ class Guard {
 
     move(): boolean {
         const move: [number, number] = GuardDirectionMap.getDirection(this.direction)
+        let nextPos: [x: number, y: number] = [-1,-1];
+        let nextPoint: String | Obstacle = '.';
         try {
-            if (this.map.getMap()[this.position[0]+move[0]][this.position[1]+move[1]] instanceof Obstacle) {
+            nextPos = [this.position.x + move[0], this.position.y + move[1]];
+            nextPoint = this.map.getMap()[nextPos[0]][nextPos[1]];
+            if (this.positionContains(new GuardPosition(nextPos[0], nextPos[1], this.direction))) {
+                throw new InfinteLoopError;
+            }
+            if (nextPoint instanceof Obstacle) {
                 this.turnRight();
                 return true;
+            } else if (nextPos[1] >= this.map.length() || nextPos[1] < 0) {
+                throw TypeError;
             }
-        } catch (TypeError) {
+        } catch (err) {
+            if (err instanceof InfinteLoopError) {
+                throw err;
+            }
             return false;
         }
-        this.position[0] += move[0];
-        this.position[1] += move[1];
-        if (this.map.getMap()[this.position[0]][this.position[1]] != 'X') {
-            this.map.getMap()[this.position[0]][this.position[1]] = 'X'
+        this.position = new GuardPosition(nextPos[0], nextPos[1], this.direction);
+        if (nextPoint != 'X') {
+            this.map.getMap()[this.position.x][this.position.y] = 'X'
+            this.positions.push(this.position);
             this.moves++;
         }
         return true;
+    }
+
+    positionContains(pos: GuardPosition): boolean {
+        return this.positions.some((position) => pos.equals(position));
     }
 }
 
@@ -139,6 +183,42 @@ async function main() {
     };
 
     console.log('Guard Moves:', guard.moves);
+
+    let obstacles: Array<Obstacle> = []
+    map.forEach((value, column) => {
+        value.forEach((val, row) => {
+            if (val == 'X') {
+                obstacles.push(new Obstacle(column, row)); // potential out by one again
+                map[column][row] = '.'
+            }
+        });
+    });
+
+    let workingObstacles: Array<Obstacle> = [];
+    obstacles.forEach((obstacle) => {
+        let newMap: any[][] = guardMap.copy();
+        newMap[obstacle.x][obstacle.y] = obstacle;
+
+        console.log('Map for obstacle:', obstacle);
+
+        const newGuardMap = new GuardMap(newMap);
+        const newGuard = new Guard(newGuardMap, guardStartPos);
+        try {
+            let inBounds = true;
+
+            while (inBounds) {
+                inBounds = newGuard.move();
+            };
+        } catch (err: any) {
+            if (err instanceof InfinteLoopError) {
+                console.log('Cause:', newGuard.position);
+            }
+            workingObstacles.push(obstacle);
+        }
+        newMap = [];
+    });
+
+    console.log('Working Obstacles', workingObstacles.length);
 }
 
 main().catch(console.error);
