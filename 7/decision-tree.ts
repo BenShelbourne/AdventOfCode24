@@ -1,45 +1,5 @@
 import * as fsPromise from 'fs/promises';
-
-class Node {
-    element: number;
-    next: any;
-
-    constructor(val: number) {
-        this.element = val;
-        this.next = null;
-    }
-
-    hasNext() {
-        return this.next;
-    }
-}
-
-class EmptyNode extends Node {
-    constructor(val: number) {
-        super(val);
-    }
-}
-
-class LinkedList {
-    head: Node = new EmptyNode(-1);
-    len = 0;
-
-    append(element: number) {
-        let node = new Node(element);
-        let current: Node;
-
-        if (this.head instanceof EmptyNode) {
-            this.head = node;
-        } else {
-            current = this.head;
-            while (current.next) {
-                current = current.next;
-            }
-            current.next = node;
-        }
-        this.len++;
-    }
-}
+import { LinkedList, Node } from '../common/linked-list';
 
 class DecisionTree {
     values: LinkedList;
