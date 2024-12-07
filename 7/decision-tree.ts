@@ -56,15 +56,17 @@ class DecisionTree {
         if (node.hasNext()) {
             const multi: number = base * node.next.element;
             const add: number = base + node.next.element;
+            const concat: number = Number(base.toString() + node.next.element.toString());
 
             if (node.next.hasNext()) {
                 const multiBranch: Array<number> = this.getLeaves(multi, node.next);
                 const addBranch: Array<number> = this.getLeaves(add, node.next);
+                const concatBranch: Array<number> = this.getLeaves(concat, node.next);
 
-                return [...multiBranch, ...addBranch];
+                return [...multiBranch, ...addBranch, ...concatBranch];
             }
 
-            return [multi, add];
+            return [multi, add, concat];
         }
         return [base];
     }
