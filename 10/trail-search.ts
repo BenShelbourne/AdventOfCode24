@@ -30,9 +30,9 @@ class TrailHead {
 
     findTrail(searchIdx: number, position: [number, number]): void {
         if (searchIdx == this.search.length) {
-            if (this.trails.some((val) => val[0] == position[0] && val[1] == position[1])){
-                return;
-            }
+            // if (this.trails.some((val) => val[0] == position[0] && val[1] == position[1])){
+            //     return;
+            // }
             this.trails.push(position);
             return;
         }
