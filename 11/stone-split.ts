@@ -1,57 +1,57 @@
-import * as fsPromise from 'fs/promises';
+class Stones {
+    blinkCache: Map<number, Array<number>> = new Map();
+    startBlinkingCache: Map<string, number> = new Map();
 
-class Stone {
-    numbers: Array<number> = [];
+    blink(stone: number): Array<number> {
+        if (this.blinkCache.has(stone)) {
+            return this.blinkCache.get(stone)!;
+        }
 
-    constructor(initialNumber: number) {
-        this.numbers.push(initialNumber);
+        let result: Array<number>;
+        if (stone == 0) {
+            result = [1];
+        } else if (stone.toString().length % 2 == 0) {
+            const numberLength = stone.toString().length;
+            const numbers: Array<number> = stone.toString().split('').map((val) => Number(val));
+            const leftNumber = numbers.slice(0, numberLength / 2);
+            const rightNumber = numbers.slice(numberLength / 2);
+            result = [Number(leftNumber.join('')), Number(rightNumber.join(''))];
+        } else {
+            result = [stone * 2024];
+        }
+
+        this.blinkCache.set(stone, result);
+        return result;
     }
 
-    blink(): void {
-        let newOrder: Array<number> = [];
-        this.numbers.forEach((num, idx) => {
-            if (num == 0) {
-                newOrder.push(this.zeroToOne());
-            } else if (num.toString().length % 2 == 0) {
-                newOrder.push(...this.split(idx));
-            } else {
-                newOrder.push(this.multiply(idx));
-            }
-        });
-        this.numbers = newOrder;
-    }
+    start_blinking(stone: number, remaining: number): number {
+        const cacheKey = `${stone}-${remaining}`;
+        if (this.startBlinkingCache.has(cacheKey)) {
+            return this.startBlinkingCache.get(cacheKey)!;
+        }
 
-    zeroToOne(): number {
-        return 1;
-    }
+        let result: number;
+        if (remaining == 0) {
+            result = 1;
+        } else {
+            result = this.blink(stone).map((s) => this.start_blinking(s, remaining - 1)).flat().reduce((prev, curr) => prev + curr);
+        }
 
-    split(index: number): Array<number> {
-        const numberLength = this.numbers[index].toString().length;
-        const numbers: Array<number> = this.numbers[index].toString().split('').map((val) => Number(val));
-        const leftNumber = numbers.slice(0, numberLength/2);
-        const rightNumber = numbers.slice(numberLength/2);
-        return [Number(leftNumber.join('')), Number(rightNumber.join(''))];
-    }
-
-    multiply(index: number): number {
-        return this.numbers[index] * 2024;
+        this.startBlinkingCache.set(cacheKey, result);
+        return result;
     }
 }
 
 async function main() {
-    const fileInput = await fsPromise.readFile('/home/benshe01/src/advent24/11/resources/input.txt', 'utf-8');
-    let stones: Array<Stone> = [];
-    fileInput.split(' ').forEach((stone) => {
-        stones.push(new Stone(Number(stone)));
-    });
+    const stones: Array<number> = [773, 79858, 0, 71, 213357, 2937, 1, 3998391];
+    const blink = new Stones();
+    let total = 0;
 
-    for(let i = 0; i < 25; i++) {
-        stones.forEach((stone) => stone.blink());
+    for (const stone of stones) {
+        total += blink.start_blinking(stone, 75);
     }
 
-    const line = stones.map((stone) => stone.numbers).flat();
-
-    console.log('Length:', line.length);
+    console.log('Total:', total);
 }
 
 main().catch(console.error);
